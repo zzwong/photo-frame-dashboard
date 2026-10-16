@@ -186,3 +186,64 @@ Units matching the RK3126 `AKIMART` profile share this same setup pipeline with 
 **Undo instructions specific to the Akimart profile:**
 - **Vendor Apps:** `pm unhide com.muxintu.app.mxota; pm unhide com.szclink.app.cldevicetest`, then `pm enable <pkg>` for them and `net.frameo.frame`, `android.rockchip.update.service`
 - **Swap / ZRAM:** `mount -o remount,rw /system; cp /system/bin/install-recovery.sh.bak /system/bin/install-recovery.sh; rm -f /system/su.d/50zram; mount -o remount,ro /system`, reboot
+
+### SSA ZN-DP1002: sensor, clock and diagnostic limits
+
+Read-only checks on a separate Linux-connected frame reporting firmware
+`SSA-ZN-DP1002-V1.0.1202509261611.release-keys`, RK3126, Android 6.0.1 and Frameo
+1.27.5. Its retail label is unconfirmed. This is the build reported in
+[#134](https://github.com/wesbos/photo-frame-dashboard/pull/134), **not** the supported
+`user.cdm` Akimart profile above. #134 covers a different physical unit's setup, backup and network-traffic tests; none
+was repeated here; do not change the script's fingerprint guard to use them.
+
+| Check | Observation | What it establishes |
+| --- | --- | --- |
+| Accelerometer | `gs_mir3da` bound at I²C `0-0026`; `gsensor` input; changing XYZ events in `sensorservice` | A working acceleration input. Named gyro, compass, light, pressure, proximity and temperature sensors had no readings in this capture; their presence remains unverified. |
+| Bluetooth | Android declares Bluetooth; manager off, no controller in `/sys/class/bluetooth`, no BLE feature declaration | Neither working Bluetooth/BLE nor its physical absence is established. |
+| RTC | `rtc0` names `hym8563`; kernel reports `hctosys: invalid date/time`; RTC reads `2065-25-45` and `45:85:85` | An RTC driver exists but did not supply valid time. This does not prove a missing battery, identify a fault or establish retention after a power cut. |
+| Clock and build | Running clock in May 2021; kernel/firmware build in September 2025; Android patch level July 2016 | These are different dates. An About-screen date is unreliable with this clock; a newer build date does not establish newer security patches. |
+| CPU / GPU | Four ARMv7 cores; CPU table `816000 1008000` kHz; Mali-400 MP table only `297000000` Hz | Configured frequencies, not a speed comparison or an overclocking route. |
+| Display | Android reports `1280×800`, 160 dpi, `56.648` Hz | Reported mode, not measured panel refresh, frame rate or input latency. |
+| Battery / thermals | BatteryService says `present: false`, level 100 and temperature 424; no thermal zones exposed | Do not treat the level as a battery test or the temperature as a CPU measurement. |
+| Storage | `mmcblk0/size` is `60620800`; `/proc/partitions` gives `30310400` blocks | The former is 512-byte sectors; the latter is KiB. Both mean 31,037,849,600 bytes (31.04 GB / 28.91 GiB), consistent with 32 GB-class eMMC. This is not a full-capacity write test. |
+| Native processes | Root-owned `/system/bin/iotv`; boot service and MAC argument confirmed | It is outside the package list. Wi-Fi was disconnected, so this check establishes no external destination, traffic volume or payload. See #134 for the other owner's observations. |
+
+#### Reproduce without changing the frame
+
+Use an already working local USB ADB connection. Check `adb devices -l` privately,
+then set `FRAME_SERIAL` locally to the intended USB device's serial. Keep the serial,
+raw logs and reports private. This helper requires that explicit target and uses the
+local ADB server; it does not enable ADB, change modes or select another frame.
+
+```sh
+frame_read() (
+    unset ADB_SERVER_SOCKET
+    adb -H 127.0.0.1 -P 5037 -s "${FRAME_SERIAL:?Set the intended USB serial locally}" shell "$@"
+)
+frame_read getprop ro.build.display.id
+frame_read getprop ro.build.version.security_patch
+frame_read date -u
+frame_read cat /proc/cpuinfo
+frame_read cat /proc/meminfo
+frame_read cat /sys/class/block/mmcblk0/size
+frame_read cat /proc/partitions
+frame_read getevent -lp
+frame_read dumpsys sensorservice
+frame_read cat /sys/class/rtc/rtc0/name
+frame_read cat /proc/driver/rtc
+frame_read dumpsys battery
+frame_read ls /sys/class/thermal
+frame_read dumpsys bluetooth_manager
+frame_read ls /sys/class/bluetooth
+```
+
+Paths and available commands vary by board. Permission denied, an absent path or a
+service with no active clients is an unknown, not proof of missing hardware. The
+Android feature list and generic sensor HAL names are declarations; corroborate them
+with a bound driver, live events and a functional test. A USB host feature likewise
+does not establish peripheral operation while powered through the same connector.
+
+Check `ps` as well as `pm list packages` for programs outside the app framework. Keep
+command lines, `dmesg`, socket tables and dumps private: they can contain identifiers,
+authorized host keys and network details. Do not paste complete dumps into a report.
+No packages, clocks, CPU/GPU settings or boot files were changed for these checks.

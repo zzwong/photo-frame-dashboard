@@ -7,6 +7,9 @@ links. Rows marked "no write-up yet" are confirmed working but not documented he
 welcome. Missing yours? See the README's
 [contributing section](../README.md#check-for-updates-and-send-back-what-you-find).
 
+For an SSA RK3126 build, the [sensor and clock checks](biuframe-setup-guide.md#ssa-zn-dp1002-sensor-clock-and-diagnostic-limits)
+show why feature lists, RTC presence and build dates need separate verification.
+
 | Device&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | SoC, Android | ADB out of the box | Root | Start with | Where owners bought it |
 | --- | --- | --- | --- | --- | --- |
 | <a href="https://www.amazon.com/dp/B0C9V811L6?tag=webo080-20"><img src="images/devices/B0C9V811L6.jpg" width="120" alt="Skylight Calendar 15 inch"></a><br>Skylight Calendar 15" (150-CAL, USB name `rockchip D156`) | Rockchip RK3566, Android 12 | Varies by firmware. `user` build (`skylightOS-D156-user-…`): no, hidden 5-tap manufacturer menu. Firmware `D156.V0.10` (`userdebug`): yes, USB, no prompt (key check appears to be off; one unit); needs a micro-USB data cable | `user` build: boot ramdisk `/force_debuggable`, then `adb root`. `D156.V0.10`: built-in `su 0` | [next-session.md](next-session.md); firmware `D156.V0.10`: [skylight-d156.md](skylight-d156.md) | [Amazon](https://www.amazon.com/dp/B0C9V811L6?tag=webo080-20) (`D156.V0.10` listing not recorded) |

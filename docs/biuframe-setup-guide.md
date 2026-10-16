@@ -194,8 +194,9 @@ Read-only checks on a separate Linux-connected frame reporting firmware
 1.27.5, sold as Runxion 10.1-inch (Amazon `B0FSZ86HTM`, owner-confirmed).
 This is the build reported in
 [#134](https://github.com/wesbos/photo-frame-dashboard/pull/134), **not** the supported
-`user.cdm` Akimart profile above. #134 covers a different physical unit's setup, backup and network-traffic tests; none
-was repeated here; do not change the script's fingerprint guard to use them.
+`user.cdm` Akimart profile above. #134 covers a different physical unit's setup, backup
+and network-traffic tests; none was repeated here. This report does not qualify the
+setup script for this firmware; keep its fingerprint guard unchanged.
 
 | Check | Observation | What it establishes |
 | --- | --- | --- |
@@ -208,6 +209,25 @@ was repeated here; do not change the script's fingerprint guard to use them.
 | Battery / thermals | BatteryService says `present: false`, level 100 and temperature 424; no thermal zones exposed | Do not treat the level as a battery test or the temperature as a CPU measurement. |
 | Storage | `mmcblk0/size` is `60620800`; `/proc/partitions` gives `30310400` blocks | The former is 512-byte sectors; the latter is KiB. Both mean 31,037,849,600 bytes (31.04 GB / 28.91 GiB), consistent with 32 GB-class eMMC. This is not a full-capacity write test. |
 | Native processes | Root-owned `/system/bin/iotv`; boot service and MAC argument confirmed | It is outside the package list. Wi-Fi was disconnected, so this check establishes no external destination, traffic volume or payload. See #134 for the other owner's observations. |
+
+#### An empty Frameo can power off during inspection
+
+On this frame, the owner saw an inactivity countdown and cancelled it by touching the
+screen. Static inspection of the installed Frameo 1.27.5 app identifies a ten-minute
+`AutoStandbyDelegate` timer while there is no media and no restore in progress. Touch
+interaction resets it; the final two minutes show a countdown. With no saved Wi-Fi
+setup record it requests `svc power shutdown`; with one it requests screen-off instead.
+This checks saved setup state, not whether Wi-Fi happens to be connected.
+
+The empty, offline frame had no saved Wi-Fi record. A controlled run from the empty
+photo screen reproduced the countdown, then Android's shutdown broadcast, service and
+filesystem shutdown, low-level power-off and USB disconnect. USB disappeared about
+10 minutes 6 seconds after the verified return to that screen. No shutdown command
+was issued by the observer. This explains the reproduced black-screen/USB-loss symptom;
+it is not a long-term stability test. The saved-Wi-Fi screen-off branch was inspected
+in code, not exercised. No timer, media, network or firmware settings were changed.
+
+![Frameo power-off countdown on the empty, offline Runxion](images/runxion-empty-frame-poweroff.png)
 
 #### Reproduce without changing the frame
 

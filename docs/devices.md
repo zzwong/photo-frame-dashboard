@@ -7,7 +7,7 @@ links. Rows marked "no write-up yet" are confirmed working but not documented he
 welcome. Missing yours? See the README's
 [contributing section](../README.md#check-for-updates-and-send-back-what-you-find).
 
-For an SSA RK3126 build, the [sensor and clock checks](biuframe-setup-guide.md#ssa-zn-dp1002-sensor-clock-and-diagnostic-limits)
+For the SSA RK3126 build sold as Runxion, the [sensor and clock checks](biuframe-setup-guide.md#ssa-zn-dp1002-sensor-clock-and-diagnostic-limits)
 show why feature lists, RTC presence and build dates need separate verification.
 
 | Device&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | SoC, Android | ADB out of the box | Root | Start with | Where owners bought it |

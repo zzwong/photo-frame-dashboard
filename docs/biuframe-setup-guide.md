@@ -191,7 +191,8 @@ Units matching the RK3126 `AKIMART` profile share this same setup pipeline with 
 
 Read-only checks on a separate Linux-connected frame reporting firmware
 `SSA-ZN-DP1002-V1.0.1202509261611.release-keys`, RK3126, Android 6.0.1 and Frameo
-1.27.5. Its retail label is unconfirmed. This is the build reported in
+1.27.5, sold as Runxion 10.1-inch (Amazon `B0FSZ86HTM`, owner-confirmed).
+This is the build reported in
 [#134](https://github.com/wesbos/photo-frame-dashboard/pull/134), **not** the supported
 `user.cdm` Akimart profile above. #134 covers a different physical unit's setup, backup and network-traffic tests; none
 was repeated here; do not change the script's fingerprint guard to use them.

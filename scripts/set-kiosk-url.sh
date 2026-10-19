@@ -9,6 +9,12 @@
 
 set -euo pipefail
 
+url_has_only_allowed_chars() {
+  local LC_ALL=C
+  local allowed='^[A-Za-z0-9./:?=%~_+,#@&-]+$'
+  [[ $1 =~ $allowed ]]
+}
+
 PKG=com.wesbos.homehq
 adb_() { adb ${ADB_SERIAL:+-s "$ADB_SERIAL"} "$@"; }
 
@@ -25,7 +31,7 @@ case "$url" in
 esac
 # The URL travels through adb and the device shell; keep it to characters that
 # cannot break out of the quoting there. Percent-encode anything else.
-if printf '%s' "$url" | LC_ALL=C grep -q '[^A-Za-z0-9./:?=%~_+,#@&-]'; then
+if ! url_has_only_allowed_chars "$url"; then
   echo "URL contains characters it cannot take through adb shell; percent-encode them" >&2
   exit 1
 fi

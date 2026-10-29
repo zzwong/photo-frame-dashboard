@@ -17,27 +17,44 @@ also use the A133; their recovery and flashing procedures have not been verified
 | eMMC | SCA32G, 61,079,552 × 512-byte sectors = 31,272,730,624 bytes |
 | Display / touch | 800×1280 panel, logical landscape 1280×800 at 160 dpi; `a00zp101i004_e40` panel driver, `gslX680` touch |
 | Wi-Fi | XR829 / `xradio_wlan`, SDIO `0a9e:2282`; association and network time worked |
-| Bluetooth | Controller initialization and discovery worked; pairing, HID, audio and GATT connections not tested |
-| Sensors | Android registers no sensors; `mir3da` and `stk3x1x` fail to probe on stock firmware |
 | USB / power | Micro-USB data (`1f3a:1001`) and DC barrel jack. USB-only power flickered at startup; booted with DC power attached |
 | Access | Root ADB shell as shipped; SELinux Enforcing; vbmeta device state reports locked |
 | WebView | Stock 74.0.3729.186 → tested system-app update 155.0.8059.39; AOSP test-key signed |
 | Stock HOME | `com.waophoto.smartframe/.ui.GuideActivity` |
 
-The light-sensor node exists in the device tree, but its I²C initialization fails and no usable
-sensor interface appears. This does not establish whether the part is physically fitted.
-
 One apparent shutdown was the stock 120-second screen-sleep timeout; ADB remained available.
 
-## Stock software differences
+## Sensor and interface observations
+
+Android registers no sensors on stock firmware. Driver and device-tree entries do not
+establish fitted hardware:
+
+| Interface | Observed | Unverified |
+| --- | --- | --- |
+| Accelerometer | `mir3da` is declared; stock logs report sensor-not-found and initialization failures. | Fitted part or working acceleration/rotation samples. |
+| Light / proximity | `stk3x1x` is declared; I²C initialization fails and no usable sensor interface appears. | Fitted part or working light/proximity readings. |
+| Other inputs | `MH248` PageUp/PageDown, `bl_h18l232b` presence and IR inputs are registered. | Physical switches, presence/IR hardware or working events. |
+| Camera | HAL metadata advertises a camera; stock logs show sensor-read retries and ID `0x0`. | Fitted camera or working capture. |
+| Bluetooth | Controller initialization and Settings discovery worked. | Pairing, HID, audio or GATT connections. |
+
+## Access and stock software
 
 `ro.adb.secure=0`; `/system/xbin/su` is setuid and world-executable (mode `4777`).
-The platform certificate matches the public AOSP platform key. SELinux Enforcing does
-not make this a hardened stock image; access to `su` from an untrusted app was not tested.
+The platform certificate matches the public AOSP platform key. One unprivileged test app
+in the `untrusted_app` SELinux domain was denied execution of `su`. This does not establish
+that every app or privileged process is restricted; USB ADB still provides unauthenticated root.
 
 No standalone `com.waophoto.fota` package was installed, and no TCP 5555 or 14035 listener
 was observed. Do not assume the C-2's updater or network-ADB configuration applies.
 Allwinner's persistent logcat/kernel logging is running; its init config includes rotation.
+
+Android's default HTTPS trust manager and WebView 155 accepted the
+[eMudhra AAA-chain test hosts](https://emudhra.we-have-a-problem.com/), including the unlogged
+certificate. Android's public-key blocklist then blocked both live hosts in each client and
+all 16 offline chains in the trust manager. Ordinary HTTPS still worked; undo/reapply and a
+normal reboot were tested. This does not cover apps with independent TLS stacks.
+
+## WebView and video
 
 WebView 155.0.8059.39 installed as an update in `/data` using the
 [same pinned LineageOS APK and AOSP test-key route as the C-2](joyhong-c2-a133.md#webview-and-the-kiosk).
@@ -48,7 +65,7 @@ WebView test browser. External fonts/images were blocked; the Home HQ APK was no
 
 Local 15-second H.264 Baseline clips at 480p, 720p and 1080p/30 used
 `OMX.allwinner.video.decoder.avc`. Each 450-frame clip ended with two browser-reported dropped
-frames and no corruption. These short local trials do not qualify streaming or long-term playback.
+frames and no corruption. Streaming and long-term playback were not tested.
 
 Rollback was tested with `adb shell pm uninstall -k com.android.webview` (no `--user`):
 the factory provider returned and rendered the test page and 480p video. Avoid
@@ -57,9 +74,9 @@ After reinstalling 155, a normal reboot preserved it, Photos auto-start and Root
 
 ## Launcher and photo viewer on stock Android
 
-Rootless worked as the default HOME. A custom native photo viewer and a separate dashboard ran
-on stock Android; the owner confirmed the dashboard was responsive and fit the display. These
-were not this repo's WebView kiosk.
+Rootless worked as the default HOME. A custom native photo viewer and dashboard ran on stock
+Android; dashboard responsiveness and layout were confirmed on the panel. These were separate
+from this repo's WebView kiosk.
 
 The photo viewer's existing `BOOT_COMPLETED` receiver ran, but Android blocked its background
 Activity start. Allowing the `SYSTEM_ALERT_WINDOW` app-op for that viewer alone let the same
@@ -69,11 +86,18 @@ No overlay was drawn. After a normal ADB reboot, the viewer opened automatically
 35 seconds with Rootless still the default HOME. The cached album appeared and the viewer
 later reconnected to its server. Cold power-loss startup was not tested.
 
-Home from the viewer and Settings returned to Rootless in USB-injected navigation checks.
-No root boot hook or vendor-app disable was needed.
+No system navigation bar appeared. The repo's [floating Home button](../scripts/home-button/README.md)
+worked across apps, but its boot receiver's service start silently returned null. A local build
+used a non-exported, translucent boot Activity to start the same service after resume, then
+finish. That compatibility change is not included here. No root boot hook was added.
 
-Undo: select the stock HOME component above, turn off the viewer's boot option and restore
-its previous overlay app-op (`default` on this frame).
+Home and Settings → Apps were confirmed by touch before disabling `com.waophoto.smartframe`.
+After disabling it, Home still worked from Settings, Photos and the native dashboard; a normal
+reboot preserved the floating button, Rootless HOME and automatic photo startup.
+
+Undo: restore the vendor package's previous enabled state before selecting the stock HOME,
+turn off the viewer's boot option and restore its previous overlay app-op (`default` on this
+frame). Hide or uninstall only `com.photoframe.homebutton` to remove the floating button.
 
 ## Firmware preservation and differences
 

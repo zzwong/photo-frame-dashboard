@@ -87,9 +87,11 @@ No overlay was drawn. After a normal ADB reboot, the viewer opened automatically
 later reconnected to its server. Cold power-loss startup was not tested.
 
 No system navigation bar appeared. The repo's [floating Home button](../scripts/home-button/README.md)
-worked across apps, but its boot receiver's service start silently returned null. A local build
-used a non-exported, translucent boot Activity to start the same service after resume, then
-finish. That compatibility change is not included here. No root boot hook was added.
+worked across apps, but Allwinner's background manager refused its service after reboot.
+The vendor **Auto run** app saved Frame Home's Allowed choice without restoring the runtime
+list at boot. An Activity workaround was intermittent. [PR #270](https://github.com/wesbos/photo-frame-dashboard/pull/270)
+adds an opt-in to reload those saved choices on this exact firmware/vendor APK; two normal
+reboots and Hide, opt-out and Disallowed checks passed. No root boot hook was added.
 
 Home and Settings → Apps were confirmed by touch before disabling `com.waophoto.smartframe`.
 After disabling it, Home still worked from Settings, Photos and the native dashboard; a normal
@@ -97,7 +99,8 @@ reboot preserved the floating button, Rootless HOME and automatic photo startup.
 
 Undo: restore the vendor package's previous enabled state before selecting the stock HOME,
 turn off the viewer's boot option and restore its previous overlay app-op (`default` on this
-frame). Hide or uninstall only `com.photoframe.homebutton` to remove the floating button.
+frame). Disable the helper’s saved-settings reload option and restore only its previous
+Auto run choice. Hide or uninstall `com.photoframe.homebutton` to remove the floating button.
 
 ## Firmware preservation and differences
 

@@ -7,19 +7,23 @@ need their own assessment.
 
 Use the [device index](devices.md), existing [write/backup rules](../README.md#rules-we-learned-the-hard-way)
 and [private frame records](frame-records.md). Confirm the model, firmware fingerprint and
-current access path before applying a device-specific fix.
+current access path before considering a device-specific fix. Work within the owner's approved
+scope and the linked write/backup rules. Confirm that active network tests, reboots and shared
+infrastructure changes are covered; obtain approval for anything outside that scope. A matching
+device report is evidence, not authorization.
 
 ## Known risks and advisories
 
 These are pointers to public evidence, not a universal affected-device list. Check current
 primary advisories before relying on a version or mitigation. New entries should identify the
-affected component/build, evidence, tested mitigation and undo, remaining risk and untested cases.
+affected component/build, evidence, remaining risk and untested cases, plus any tested mitigation
+and undo.
 
 | Finding | Evidence and scope | What to establish on the selected frame |
 | --- | --- | --- |
 | Root ADB, permissive `su` or public signing keys | [C-2 access](joyhong-c2-a133.md#access-out-of-the-box), [XORO root](xoro-cpf10pf.md#adb-and-root) | USB/network authentication, listening interfaces, key ownership, `su` permissions and app-context access. Root shell or a permission bit alone does not establish every app's access under SELinux. |
-| Hidden privileged background software | [Runxion `iotv` observations](runxion-zn-dp1002-rk3126.md#hidden-root-agent-iotv), [public analysis #205](https://github.com/wesbos/photo-frame-dashboard/issues/205) | Match binary hashes, process ownership, startup mechanism and actual network connections. A filename, driver or package name alone is not a malware diagnosis. |
-| Vendor update/boot dependencies | [C-2 FOTA hook](joyhong-c2-a133.md#the-vendor-fota-boot-hook-read-this-before-disabling-anything), [Skylight app-update analysis](app-updates.md) | Which component downloads/installs updates, its privileges and whether Android depends on it at boot. Disabling the entire C-2 FOTA package broke every Activity; use only the matching report's tested component change. |
+| Hidden privileged background software | [Runxion `iotv` observations](runxion-zn-dp1002-rk3126.md#hidden-root-agent-iotv), [public analysis #205](https://github.com/wesbos/photo-frame-dashboard/issues/205) | The reported unit ran a root process with network connections; the traffic content was not established. Match hashes, process ownership, startup mechanism and connections on the selected frame. A name alone is not a malware diagnosis. |
+| Vendor update/boot dependencies | [C-2 FOTA hook](joyhong-c2-a133.md#the-vendor-fota-boot-hook-read-this-before-disabling-anything), [Skylight app-update analysis](app-updates.md) | Which component downloads or installs updates, its privileges and whether Android depends on it at boot. Disabling the whole FOTA package broke Activities on the reported C-2 firmware; disabling its updater service alone was tested on that unit. |
 | Compromised eMudhra intermediate CAs | [Google advisory](https://blog.google/security/protecting-chrome-and-android-users-from-compromised-emudhra-intermediate-ca-certificates/), [Mozilla advisory](https://blog.mozilla.org/security/2026/10/20/protecting-firefox-users-following-the-compromise-of-emudhra-intermediate-certificates/), [frame findings #229](https://github.com/wesbos/photo-frame-dashboard/issues/229) | The trust path used by each app, available blocklist updates and actual rejection of affected chains. Chrome, WebView and native apps can have different update/trust paths. Root presence is an exposure indicator, not proof of successful TLS acceptance. |
 
 Google distributed Android blocks through Google Play services. A frame without that channel
@@ -39,8 +43,9 @@ Do not disable every certificate from an issuer or replace the entire trust stor
   to trusted hosts. A VPN/tailnet still needs access controls and working device authentication.
 - Start without personal data or primary accounts. Use synthetic content, per-frame read-only
   credentials and narrowly shared albums/calendars. Keep operator/admin keys off the frame.
-- Preserve a management path independent of the change being tested. Prove Settings → Apps
-  and a return to Home by touch before disabling the app that currently provides access.
+- Preserve a management path independent of the change. Before changing an app or route that
+  supplies access, prove Settings → Apps and a return to Home by touch. Keep a second way in;
+  some builds hide disabled apps in Settings.
 
 A rooted frame can change its own firewall. Use router/AP enforcement for containment; a
 frame-local firewall is an additional layer. Existing firewall scripts are model-specific
@@ -61,23 +66,27 @@ examples, not an isolation certificate: check their LAN, IPv6, multicast and man
    AOSP key is needed for re-signing, first verify the original source and hash; the new local
    signature only proves local packaging. Keep factory/known-good artifacts for rollback.
    Resolve clock/trust errors instead of bypassing HTTPS certificate or hostname checks.
-4. **Apply one reviewed change.** Avoid blanket debloat lists, global trust changes and copied
+4. **Apply one reviewed change.** Avoid blanket debloat lists, issuer-wide CA removal and unverified
    boot/firewall recipes. A successful install or shell exit is not runtime verification.
-5. **Test function and security.** Check the actual renderer/app, required HTTPS service, Home/
-   Settings escape, network reconnect and changed security behavior. Run a normal reboot;
-   leave cold-power and USB-disconnected sleep/wake pending until tested. Preserve failures.
+5. **Test function and security.** Within the owner's approved scope, check the actual renderer/app,
+   required HTTPS service, Home/Settings escape, network reconnect and changed security behavior.
+   If a reboot is authorized and access and recovery are ready, test persistence; record cold-power
+   and USB-disconnected sleep/wake as untested unless checked. Preserve failures and report checks
+   outside the scope as not tested.
 6. **Hand off the result.** Record what changed, evidence, rollback and unresolved risks in the
    existing private record. State the browser/OS update source and who owns future updates.
    Re-check after app, firmware or network changes and revoke credentials when retiring a frame.
 
 ### Evidence that supports a security claim
 
-For network restrictions, verify an allowed connection and confirm the denied target is
-listening from an independent permitted host. Correlate the denial with enforcement evidence.
+For network restrictions, use owner-approved targets, verify an allowed connection and confirm
+the denied target is listening from an independent permitted host. Correlate the denial with
+enforcement evidence.
 For certificate distrust, test the relevant app's trust path against the affected chain and a
 known-good HTTPS control. A timeout, DNS failure or generic JavaScript `fetch` error is
-inconclusive; establish a certificate-verification rejection. Use synthetic data and an
-owner-approved local fixture or public checker, without account cookies or credentials.
+inconclusive; establish the reason for rejection, which could be certificate transparency rather
+than distrust of the intermediate. Use synthetic data and an owner-approved local fixture or
+public checker, without account cookies or credentials. A public checker makes external requests.
 
 Report checks as **verified**, **failed**, **not tested** or **inconclusive**. Include the model/
 firmware, app versions, method and limitations. Package absence, a closed-port snapshot or an
@@ -85,8 +94,9 @@ antivirus result cannot establish that a frame is free of unwanted software.
 
 ## Suspected compromise
 
-Isolate the frame using the external network control, preserve private diagnostic evidence,
-and revoke its service credentials from a trusted machine. Check affected services before
-re-enrollment. Reflashing or factory-resetting the same vendor firmware does not establish
-that a factory component was removed. Keep new private data off the frame until the owner's
+Use a trusted machine to carry out the owner's approved incident plan: external isolation,
+private evidence preservation and revocation of frame-specific credentials. Agree on actions
+outside that scope before applying them, including changes to shared network controls or
+credentials. Check affected services before re-enrollment. Reflashing or factory-resetting the
+same vendor firmware does not establish that a factory component was removed. Keep new private data off the frame until the owner's
 chosen containment and recovery checks pass.

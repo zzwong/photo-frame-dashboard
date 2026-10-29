@@ -21,7 +21,7 @@ also use the A133; their recovery and flashing procedures have not been verified
 | Sensors | Android registers no sensors; `mir3da` and `stk3x1x` fail to probe on stock firmware |
 | USB / power | Micro-USB data (`1f3a:1001`) and DC barrel jack. USB-only power flickered at startup; booted with DC power attached |
 | Access | Root ADB shell as shipped; SELinux Enforcing; vbmeta device state reports locked |
-| WebView | `com.android.webview` 74.0.3729.186, signed with the AOSP test key |
+| WebView | Stock 74.0.3729.186 → tested system-app update 155.0.8059.39; AOSP test-key signed |
 | Stock HOME | `com.waophoto.smartframe/.ui.GuideActivity` |
 
 The light-sensor node exists in the device tree, but its I²C initialization fails and no usable
@@ -39,10 +39,21 @@ No standalone `com.waophoto.fota` package was installed, and no TCP 5555 or 1403
 was observed. Do not assume the C-2's updater or network-ADB configuration applies.
 Allwinner's persistent logcat/kernel logging is running; its init config includes rotation.
 
-WebView's signing certificate matches the
-[AOSP test key](https://android.googlesource.com/platform/build/+/refs/tags/android-10.0.0_r47/target/product/security/testkey.x509.pem).
-This makes the C-2/C-3 WebView update route worth testing; an update and renderer operation
-have not been tested on this frame.
+WebView 155.0.8059.39 installed as an update in `/data` using the
+[same pinned LineageOS APK and AOSP test-key route as the C-2](joyhong-c2-a133.md#webview-and-the-kiosk).
+The factory APK remained unchanged. `oklch`, `color-mix`, `:has()`, nesting, flex gap and
+`aspect-ratio` passed; all six failed on stock WebView 74. A pinned build of the repo's demo
+passed visible-content and USB touch-navigation checks on all seven tabs in the existing
+WebView test browser. External fonts/images were blocked; the Home HQ APK was not tested.
+
+Local 15-second H.264 Baseline clips at 480p, 720p and 1080p/30 used
+`OMX.allwinner.video.decoder.avc`. Each 450-frame clip ended with two browser-reported dropped
+frames and no corruption. These short local trials do not qualify streaming or long-term playback.
+
+Rollback was tested with `adb shell pm uninstall -k com.android.webview` (no `--user`):
+the factory provider returned and rendered the test page and 480p video. Avoid
+`uninstall-system-updates` on this Android 10 build: it operates on all updated system apps.
+After reinstalling 155, a normal reboot preserved it, Photos auto-start and Rootless HOME.
 
 ## Launcher and photo viewer on stock Android
 

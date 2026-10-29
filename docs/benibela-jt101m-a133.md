@@ -3,11 +3,11 @@
 One 10.1-inch Benibela sold as `JT101M-B02`; Android reports `JT101M-A02`.
 Tested from a Linux host over micro-USB, with separate DC barrel power.
 The [C-2](joyhong-c2-a133.md) and [LOOFII C-3](allwinner-a133-loofii-c3.md)
-share the A133 platform, but their recovery and flashing procedures are not qualified here.
+also use the A133; their recovery and flashing procedures have not been verified on this frame.
 
 ## Identity and hardware
 
-| Item | Observed on this unit |
+| Item | Observed |
 | --- | --- |
 | SoC | Allwinner A133, four Cortex-A53 cores; configured maximum 1.512 GHz |
 | OS | Android 10 / API 29, kernel 4.9.170; 64-bit kernel, 32-bit ARM userspace, VNDK 29 |
@@ -23,41 +23,37 @@ share the A133 platform, but their recovery and flashing procedures are not qual
 | Access | Root ADB shell as shipped; SELinux Enforcing; vbmeta device state reports locked |
 | Stock HOME | `com.waophoto.smartframe/.ui.GuideActivity` |
 
-Unlike the C-2 report, this unit has XR829 Wi-Fi and Enforcing SELinux. The light-sensor
-node exists in the device tree, but its I²C initialization fails and no usable sensor
-interface appears. That does not establish whether the part is physically fitted.
-Camera feature/HAL declarations likewise do not prove a camera is present.
+The light-sensor node exists in the device tree, but its I²C initialization fails and no usable
+sensor interface appears. This does not establish whether the part is physically fitted.
 
-An apparent shutdown was the stock 120-second screen-sleep timeout. It was not demonstrated
-power loss. ADB remained available during that event.
+One apparent shutdown was the stock 120-second screen-sleep timeout; ADB remained available.
 
 ## Launcher and photo viewer on stock Android
 
-Rootless worked as default HOME. A custom native photo viewer and dashboard ran on stock
-Android; the owner confirmed the dashboard was responsive and fit the display. These were
-separate apps, not this repo's WebView kiosk.
+Rootless worked as the default HOME. A custom native photo viewer and a separate dashboard ran
+on stock Android; the owner confirmed the dashboard was responsive and fit the display. These
+were not this repo's WebView kiosk.
 
 The photo viewer's existing `BOOT_COMPLETED` receiver ran, but Android blocked its background
-Activity start. Allowing `SYSTEM_ALERT_WINDOW` for that viewer alone let the same receiver
-bring it onscreen. Android documents this as a
+Activity start. Allowing the `SYSTEM_ALERT_WINDOW` app-op for that viewer alone let the same
+receiver bring it onscreen. Android documents this as a
 [background-launch exception](https://developer.android.com/guide/components/activities/secure-bal#when-background-activity-starts-are-allowed-exceptions).
-No overlay was drawn. A subsequent normal reboot opened the viewer automatically in about
-35 seconds, with Rootless still the default HOME. Wi-Fi and the cached album recovered;
-the viewer subsequently reconnected to its server.
+No overlay was drawn. After a normal ADB reboot, the viewer opened automatically in about
+35 seconds with Rootless still the default HOME. The cached album appeared and the viewer
+later reconnected to its server. Cold power-loss startup was not tested.
 
-Home from the viewer and Settings returned to Rootless (USB-injected navigation checks).
-No root boot hook, system remount or vendor-app disable was needed. This tests one viewer
-on this firmware, not every kiosk app. Cold power-loss startup remains untested.
+Home from the viewer and Settings returned to Rootless in USB-injected navigation checks.
+No root boot hook or vendor-app disable was needed.
 
 Undo: select the stock HOME component above, turn off the viewer's boot option and restore
-its previous overlay app-op (`default` on this unit). Keep Settings/ADB accessible while testing.
+its previous overlay app-op (`default` on this frame).
 
 ## Firmware preservation and differences
 
 Preserved 18 regions: firmware partitions, both eMMC hardware boot areas, device configuration
 and primary/backup partition tables. Exact byte counts, gzip readback and independent device
-hashes were checked. Userdata, cache and writable DSU metadata were excluded: this is a
-firmware backup, not a full-device clone. A full restore has not been tested.
+hashes were checked. Userdata, cache, writable DSU metadata and RPMB were excluded.
+This is a partial firmware backup, not a full-device clone; a full restore has not been tested.
 
 These whole-partition hashes and offsets differ from the C-2 record:
 
@@ -69,13 +65,13 @@ These whole-partition hashes and offsets differ from the C-2 record:
 
 ## Android 12 trials and recovery limits
 
-DSU attempts, including phh Android 12.1 v416, reached U-Boot fastboot without guest ADB.
-A guest-init recorder produced no output. This does not establish the cause or prove that
-Android 12 is incompatible. Stock Android was recovered afterward; ten checked firmware
-regions still matched the preserved copies. No firmware partitions were flashed or unlocked.
+DSU attempts, including phh Android 12.1 v416 and a stock-system control, reached U-Boot
+fastboot without guest ADB. A guest-init recorder produced no output. The cause is unknown;
+the result does not establish Android 12 incompatibility. Stock Android was recovered, and
+ten checked firmware regions matched the preserved copies. No firmware partitions were
+flashed and the bootloader was not unlocked.
 
 Software FEL entry and read-only SoC identification worked (`soc=00001855(A133)`). A later
 retained-DRAM read stalled FEL and required removal of both DC and USB power. The attempted
 reset-pinhole entry booted Android normally, so hardware FEL entry remains unverified.
-A software-only FEL return and full firmware restore are also unqualified. Do not repeat
-the stalled DRAM probe or assume another A133 board's recovery recipe applies.
+A software-only FEL return remains unverified. Do not repeat the stalled DRAM probe.

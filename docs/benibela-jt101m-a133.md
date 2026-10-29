@@ -13,7 +13,7 @@ also use the A133; their recovery and flashing procedures have not been verified
 | OS | Android 10 / API 29, kernel 4.9.170; 64-bit kernel, 32-bit ARM userspace, VNDK 29 |
 | Build fingerprint | `Allwinner/ceres_aw/ceres-aw:10/QP1A.191105.004/eng.joy.20220905.163444:eng/test-keys` |
 | Security patch | `2020-11-05` |
-| RAM | 2,021,884 KiB visible to the kernel (2 GB class) |
+| RAM | 2,021,884 KiB visible to the kernel (2 GB class); `ro.config.low_ram=true` |
 | eMMC | SCA32G, 61,079,552 × 512-byte sectors = 31,272,730,624 bytes |
 | Display / touch | 800×1280 panel, logical landscape 1280×800 at 160 dpi; `a00zp101i004_e40` panel driver, `gslX680` touch |
 | Wi-Fi | XR829 / `xradio_wlan`, SDIO `0a9e:2282`; association and network time worked |
@@ -21,12 +21,28 @@ also use the A133; their recovery and flashing procedures have not been verified
 | Sensors | Android registers no sensors; `mir3da` and `stk3x1x` fail to probe on stock firmware |
 | USB / power | Micro-USB data (`1f3a:1001`) and DC barrel jack. USB-only power flickered at startup; booted with DC power attached |
 | Access | Root ADB shell as shipped; SELinux Enforcing; vbmeta device state reports locked |
+| WebView | `com.android.webview` 74.0.3729.186, signed with the AOSP test key |
 | Stock HOME | `com.waophoto.smartframe/.ui.GuideActivity` |
 
 The light-sensor node exists in the device tree, but its I²C initialization fails and no usable
 sensor interface appears. This does not establish whether the part is physically fitted.
 
 One apparent shutdown was the stock 120-second screen-sleep timeout; ADB remained available.
+
+## Stock software differences
+
+`ro.adb.secure=0`; `/system/xbin/su` is setuid and world-executable (mode `4777`).
+The platform certificate matches the public AOSP platform key. SELinux Enforcing does
+not make this a hardened stock image; access to `su` from an untrusted app was not tested.
+
+No standalone `com.waophoto.fota` package was installed, and no TCP 5555 or 14035 listener
+was observed. Do not assume the C-2's updater or network-ADB configuration applies.
+Allwinner's persistent logcat/kernel logging is running; its init config includes rotation.
+
+WebView's signing certificate matches the
+[AOSP test key](https://android.googlesource.com/platform/build/+/refs/tags/android-10.0.0_r47/target/product/security/testkey.x509.pem).
+This makes the C-2/C-3 WebView update route worth testing; an update and renderer operation
+have not been tested on this frame.
 
 ## Launcher and photo viewer on stock Android
 

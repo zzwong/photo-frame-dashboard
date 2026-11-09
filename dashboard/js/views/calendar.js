@@ -149,7 +149,7 @@
     var now = App.now();
     return '<div class="week">' + [0, 1, 2, 3, 4, 5, 6].map(function (i) {
       var d = App.addDays(V.date, i), today = App.sameDay(d, now);
-      var ad = App.allDayOn(d), list = App.timedOn(d), max = 7 - ad.length, more = list.length - max;
+      var ad = App.allDayOn(d), list = App.timedOn(d), max = Math.max(0, 7 - ad.length), more = list.length - max;
       return '<div class="wk-col' + (today ? ' is-today' : '') + '" data-day="' + (+d) + '">' +
         '<div class="wk-head"><b>' + App.fmt.dayShort(d) + '</b><span class="num">' + d.getDate() + '</span></div>' +
         ad.map(function (e) { return '<button class="wk-ad" data-ev="' + e.id + '" style="' + App.pstyle(App.evColor(e)) + '">' + App.esc(e.title) + '</button>'; }).join('') +

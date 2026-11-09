@@ -189,8 +189,10 @@
     return { k: d.getFullYear(), t: App.fmt.month(d) };
   }
   function header() {
-    var t = title();
-    var isToday = V.mode === 'month' ? (V.date.getMonth() === App.now().getMonth()) : App.sameDay(V.date, App.now());
+    var t = title(), now = App.now();
+    var isToday = V.mode === 'month'
+      ? (V.date.getFullYear() === now.getFullYear() && V.date.getMonth() === now.getMonth())
+      : App.sameDay(V.date, now);
     return '<header class="cal-head">' +
       '<button class="icon-btn" data-nav="-1" aria-label="Previous">' + App.icon('left', 24) + '</button>' +
       '<div class="cal-title"><div class="serif">' + t.t + '</div><div class="label">' + t.k + '</div></div>' +
@@ -367,3 +369,4 @@
   });
   App.on('time', function () { V.date = App.dayStart(App.now()); V.scroll = null; });
 })();
+
